@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class PurchaseOrder extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'po_no',
+        'supplier',
+        'order_date',
+        'total',
+        'payment_status',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'order_date' => 'date',
+            'total' => 'decimal:2',
+        ];
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderItem::class);
+    }
+}
