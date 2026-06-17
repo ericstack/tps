@@ -18,6 +18,8 @@ const routes = [
             { path: 'deliveries', name: 'deliveries', component: () => import('../pages/Deliveries.vue') },
             { path: 'purchase-orders', name: 'purchase-orders', component: () => import('../pages/PurchaseOrders.vue') },
             { path: 'users', name: 'users', component: () => import('../pages/Users.vue'), meta: { admin: true } },
+            { path: 'profile', name: 'profile', component: () => import('../pages/Profile.vue') },
+            { path: 'settings', name: 'settings', component: () => import('../pages/Settings.vue') },
         ],
     },
 ];

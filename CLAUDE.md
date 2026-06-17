@@ -26,8 +26,10 @@ Mid-migration from a procedural-PHP app to a **Laravel 12 + Vue 3** stack.
 | `routes/api.php` | API routes (auth + apiResource) |
 | `routes/web.php` | Catch-all serving the Vue SPA shell |
 | `database/migrations/` | Schema (framework tables prefixed `0001_…`, domain tables `2026_…`) |
-| `database/seeders/` | `DatabaseSeeder` — admin user + categories |
+| `database/factories/` | Model factories for every entity (used by the seeder) |
+| `database/seeders/` | `DatabaseSeeder` — admin/staff users + full faker dataset across all tables |
 | `resources/js/` | Vue SPA: `pages/`, `components/`, `layouts/`, `stores/`, `router/` |
+| `resources/css/app.css` | Design system: theme tokens (light/dark) + shared `.btn`/`.input`/`.card` classes |
 | `legacy/` | Original PHP app — read-only reference |
 
 ## Commands
@@ -35,7 +37,9 @@ Mid-migration from a procedural-PHP app to a **Laravel 12 + Vue 3** stack.
 ```bash
 composer install && npm install
 cp .env.example .env && php artisan key:generate
-php artisan migrate --seed     # admin login: test / test
+php artisan migrate --seed     # builds schema + seeds full test dataset
+                               # logins: test/test (admin), staff/password (user)
+php artisan migrate:fresh --seed  # wipe + reseed fresh faker data anytime
 php artisan serve              # backend  http://localhost:8000
 npm run dev                    # Vite dev server (Vue HMR) — Laravel auto-detects the port via public/hot
 npm run build                  # production assets (use instead of `npm run dev` if you don't need HMR)
@@ -53,6 +57,8 @@ php artisan test               # tests
 - **REST CRUD** maps to `index/store/show/update/destroy`. New modules: add a model + migration + `Api/*Controller` + an `apiResource` route + a Vue page using the reusable `CrudTable` component.
 - **Column naming:** legacy business IDs were renamed to `*_code` (e.g. `employee_code`), and FK columns are `*_id`. Keep this when porting more legacy tables.
 - Frontend talks to the API via the global `window.axios` (configured for Sanctum CSRF in `resources/js/bootstrap.js`).
+- **UI**: minimalist design system driven by CSS variables in `resources/css/app.css`; dark mode via `data-theme` on `<html>`, managed by the `theme` Pinia store (persisted to `localStorage`). Use the shared `.btn`/`.input`/`.card`/`.badge` classes and theme tokens (`var(--surface)`, `var(--text)`, etc.) — don't hardcode colours. The `AppLayout` provides sidebar + topbar (theme toggle + user dropdown → Profile/Settings/Logout).
+- **Tables**: build list views with the reusable `CrudTable` component (props: `title`, `endpoint`, `columns`, `fields`, optional `filterKeys`). It provides search, column filters, click-to-sort, pagination, and the create/edit modal — pages just declare config.
 - **Auth is Sanctum SPA (cookie/session)**, not bearer tokens. Login flow: `GET /sanctum/csrf-cookie` → `POST /api/login`. Keep `SESSION_DOMAIN=null` for localhost (a bare `localhost` Domain attribute is browser-rejected → CSRF mismatch); only set a real domain in production. The SPA's served origin must be listed in `SANCTUM_STATEFUL_DOMAINS`.
 
 ## Migrating legacy data
