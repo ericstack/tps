@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Employee::query()->latest()->paginate(25);
+        return Employee::query()->latest()->paginate($request->integer('per_page', 25));
     }
 
     public function store(Request $request)
@@ -42,6 +42,7 @@ class EmployeeController extends Controller
         return $request->validate([
             'employee_code' => ['required', 'string', 'max:255', 'unique:employees,employee_code'.($id ? ",$id" : '')],
             'employee_name' => ['required', 'string', 'max:255'],
+            'position' => ['nullable', 'in:Driver,Warehouse Staff,Manager,Clerk,Supervisor,Dispatcher'],
             'address' => ['nullable', 'string', 'max:255'],
             'gender' => ['nullable', 'string', 'max:50'],
             'birthday' => ['nullable', 'date'],

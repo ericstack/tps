@@ -17,6 +17,7 @@ class Inventory extends Model
         'name',
         'description',
         'quantity',
+        'product_id',
         'category_id',
     ];
 
@@ -28,5 +29,10 @@ class Inventory extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 }

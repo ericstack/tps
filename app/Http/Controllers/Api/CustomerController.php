@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Customer::query()->latest()->paginate(25);
+        return Customer::query()->latest()->paginate($request->integer('per_page', 25));
     }
 
     public function store(Request $request)

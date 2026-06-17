@@ -15,7 +15,10 @@ class DeliveryController extends Controller
 
     public function store(Request $request)
     {
-        return response()->json(Delivery::create($this->validated($request)), 201);
+        $data = $this->validated($request);
+        $data['control_number'] = $this->nextControlNumber();
+
+        return response()->json(Delivery::create($data), 201);
     }
 
     public function show(Delivery $delivery)
@@ -35,6 +38,12 @@ class DeliveryController extends Controller
         $delivery->delete();
 
         return response()->noContent();
+    }
+
+    // Control number is system-generated (sequential, e.g. DCN-000031), never user-supplied.
+    private function nextControlNumber(): string
+    {
+        return 'DCN-'.str_pad((string) (Delivery::max('id') + 1), 6, '0', STR_PAD_LEFT);
     }
 
     private function validated(Request $request): array

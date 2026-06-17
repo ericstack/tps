@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Category::query()->latest()->paginate(25);
+        return Category::query()->latest()->paginate($request->integer('per_page', 25));
     }
 
     public function store(Request $request)

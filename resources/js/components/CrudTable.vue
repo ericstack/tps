@@ -50,7 +50,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="row in pageRows" :key="row.id">
-                        <td v-for="col in columns" :key="col.key">{{ display(row, col.key) }}</td>
+                        <td v-for="col in columns" :key="col.key">{{ display(row, col) }}</td>
                         <td class="actions">
                             <button class="btn btn-ghost btn-icon" @click="openEdit(row)" aria-label="Edit"><span v-html="editIcon" /></button>
                             <button class="btn btn-danger-ghost btn-icon" @click="destroy(row)" aria-label="Delete"><span v-html="trashIcon" /></button>
@@ -92,10 +92,18 @@
                     <form @submit.prevent="save" class="modal-body">
                         <label v-for="f in fields" :key="f.key" class="field">
                             <span>{{ f.label }}</span>
-                            <select v-if="f.options" v-model="formData[f.key]" class="select">
+                            <SearchableSelect
+                                v-if="f.options && f.searchable"
+                                v-model="formData[f.key]"
+                                :options="f.options"
+                                :placeholder="f.placeholder || `Search ${f.label.toLowerCase()}…`"
+                                @change="onChange && onChange(f.key, formData[f.key], formData)"
+                            />
+                            <select v-else-if="f.options" v-model="formData[f.key]" class="select" @change="onChange && onChange(f.key, formData[f.key], formData)">
+                                <option value="" disabled>{{ f.placeholder || `Select ${f.label.toLowerCase()}` }}</option>
                                 <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                             </select>
-                            <input v-else v-model="formData[f.key]" :type="f.type || 'text'" class="input" />
+                            <input v-else v-model="formData[f.key]" :type="f.type || 'text'" class="input" :placeholder="f.placeholder || `Enter ${f.label.toLowerCase()}`" @input="onChange && onChange(f.key, formData[f.key], formData)" />
                         </label>
                         <div class="modal-actions">
                             <button type="button" class="btn btn-ghost" @click="showForm = false">Cancel</button>
@@ -110,6 +118,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import SearchableSelect from './SearchableSelect.vue';
 
 const props = defineProps({
     title: { type: String, required: true },
@@ -118,7 +127,12 @@ const props = defineProps({
     fields: { type: Array, required: true },
     // optional: which fields are exposed as column filters; defaults to fields with options
     filterKeys: { type: Array, default: null },
+    // optional: (key, value, formData) => void — called when a form field changes (for auto-fill, etc.)
+    onChange: { type: Function, default: null },
 });
+
+// emitted after a successful create/update/delete, so parents can refresh dependent data
+const emit = defineEmits(['saved']);
 
 const rows = ref([]);
 const error = ref('');
@@ -147,9 +161,10 @@ const activeFilterCount = computed(() => Object.values(filters).filter((v) => v 
 function get(row, key) {
     return key.split('.').reduce((acc, part) => acc?.[part], row);
 }
-function display(row, key) {
-    const v = get(row, key);
-    return v == null ? '—' : v;
+function display(row, col) {
+    const v = get(row, col.key);
+    if (v == null || v === '') return '—';
+    return col.format ? col.format(v, row) : v;
 }
 
 const filtered = computed(() => {
@@ -203,7 +218,14 @@ async function load() {
     }
 }
 
-function openCreate() { editing.value = null; formData.value = {}; showForm.value = true; }
+function openCreate() {
+    editing.value = null;
+    // seed any field defaults for a fresh record
+    formData.value = Object.fromEntries(
+        props.fields.filter((f) => f.default !== undefined).map((f) => [f.key, f.default]),
+    );
+    showForm.value = true;
+}
 function openEdit(row) { editing.value = row; formData.value = { ...row }; showForm.value = true; }
 
 async function save() {
@@ -213,6 +235,7 @@ async function save() {
         else await window.axios.post(props.endpoint, formData.value);
         showForm.value = false;
         await load();
+        emit('saved');
     } catch (e) {
         error.value = e.response?.data?.message || 'Save failed.';
     }
@@ -221,6 +244,7 @@ async function destroy(row) {
     if (!confirm('Delete this record?')) return;
     await window.axios.delete(`${props.endpoint}/${row.id}`);
     await load();
+    emit('saved');
 }
 
 onMounted(load);
@@ -274,11 +298,11 @@ tbody tr:hover td { background: var(--surface-hover); }
 .error { color: var(--danger); background: var(--danger-soft); padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); margin: 0; }
 
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
-.modal { width: 460px; max-width: 100%; max-height: 90vh; overflow: auto; }
+.modal { width: 720px; max-width: 100%; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
-.modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.9rem; }
+.modal-body { padding: 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem 1.25rem; }
 .field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.82rem; font-weight: 550; color: var(--text-muted); }
-.modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.4rem; }
+.modal-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.4rem; }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

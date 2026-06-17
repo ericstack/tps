@@ -13,6 +13,7 @@ class Delivery extends Model
     protected $table = 'deliveries';
 
     protected $fillable = [
+        'control_number',
         'order_id',
         'customer_name',
         'address',

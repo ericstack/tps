@@ -17,7 +17,7 @@ class OrderFactory extends Factory
             'address' => fake()->address(),
             'contact_number' => fake()->numerify('09#########'),
             'order_quantity' => fake()->numberBetween(1, 30),
-            'status' => fake()->randomElement(['pending', 'processing', 'shipped', 'completed', 'cancelled']),
+            'status' => fake()->randomElement(['placed', 'processing', 'shipped', 'completed', 'cancelled']),
         ];
     }
 }

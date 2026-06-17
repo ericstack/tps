@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class InventoryFactory extends Factory
@@ -14,6 +15,7 @@ class InventoryFactory extends Factory
             'name' => ucfirst(fake()->words(2, true)),
             'description' => fake()->sentence(4),
             'quantity' => fake()->numberBetween(0, 100),
+            'product_id' => Product::inRandomOrder()->value('id') ?? Product::factory(),
             'category_id' => Category::inRandomOrder()->value('id') ?? Category::factory(),
         ];
     }

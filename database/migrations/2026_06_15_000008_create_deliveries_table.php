@@ -11,6 +11,7 @@ return new class extends Migration
     {
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
+            $table->string('control_number')->unique();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnUpdate()->restrictOnDelete();
             $table->string('customer_name');
             $table->string('address')->nullable();

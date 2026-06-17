@@ -24,7 +24,6 @@ class Task extends Model
         return [
             'assigned_date' => 'date',
             'due_date' => 'date',
-            'status' => 'integer',
         ];
     }
 

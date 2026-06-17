@@ -17,7 +17,7 @@ class TaskFactory extends Factory
             'assigned_date' => $assigned->format('Y-m-d'),
             'due_date' => fake()->dateTimeBetween($assigned, '+30 days')->format('Y-m-d'),
             'employee_id' => Employee::inRandomOrder()->value('id') ?? Employee::factory(),
-            'status' => fake()->randomElement([0, 1]),
+            'status' => fake()->randomElement(['open', 'in progress', 'done']),
         ];
     }
 }

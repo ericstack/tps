@@ -16,7 +16,7 @@ return new class extends Migration
             $table->date('assigned_date')->nullable(); // legacy `assigned`
             $table->date('due_date')->nullable();       // legacy `due`
             $table->foreignId('employee_id')->nullable()->constrained('employees')->cascadeOnUpdate()->nullOnDelete();
-            $table->unsignedTinyInteger('status')->default(0); // 0 = open, 1 = done
+            $table->string('status')->default('open'); // open | in progress | done
             $table->timestamps();
         });
     }

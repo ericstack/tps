@@ -45,7 +45,7 @@ class TaskController extends Controller
             'assigned_date' => ['nullable', 'date'],
             'due_date' => ['nullable', 'date'],
             'employee_id' => ['nullable', 'exists:employees,id'],
-            'status' => ['nullable', 'integer', 'in:0,1'],
+            'status' => ['nullable', 'in:open,in progress,done'],
         ]);
     }
 }

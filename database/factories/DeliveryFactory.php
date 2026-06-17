@@ -11,6 +11,7 @@ class DeliveryFactory extends Factory
     public function definition(): array
     {
         return [
+            'control_number' => fake()->unique()->bothify('DCN-######'),
             'order_id' => Order::inRandomOrder()->value('id') ?? Order::factory(),
             'customer_name' => fake()->name(),
             'address' => fake()->address(),

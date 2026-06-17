@@ -13,6 +13,7 @@ return new class extends Migration
             $table->id();
             $table->string('employee_code')->unique(); // legacy employee_id
             $table->string('employee_name');
+            $table->string('position')->nullable();
             $table->string('address')->nullable();
             $table->string('gender')->nullable();
             $table->date('birthday')->nullable();

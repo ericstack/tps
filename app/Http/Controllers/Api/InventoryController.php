@@ -10,7 +10,7 @@ class InventoryController extends Controller
 {
     public function index()
     {
-        return Inventory::with('category')->latest()->paginate(25);
+        return Inventory::with(['product', 'category'])->latest()->paginate(25);
     }
 
     public function store(Request $request)
@@ -20,7 +20,7 @@ class InventoryController extends Controller
 
     public function show(Inventory $inventory)
     {
-        return $inventory->load('category');
+        return $inventory->load(['product', 'category']);
     }
 
     public function update(Request $request, Inventory $inventory)
@@ -44,6 +44,7 @@ class InventoryController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'quantity' => ['required', 'integer', 'min:0'],
+            'product_id' => ['required', 'exists:products,id'],
             'category_id' => ['required', 'exists:categories,id'],
         ]);
     }
