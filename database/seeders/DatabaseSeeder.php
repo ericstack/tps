@@ -25,13 +25,21 @@ class DatabaseSeeder extends Seeder
         // --- Auth accounts ---
         User::updateOrCreate(
             ['username' => 'test'],
-            ['name' => 'Test Admin', 'password' => Hash::make('test'), 'access' => 1, 'active' => true],
+            ['name' => 'Test Admin', 'password' => Hash::make('test'), 'role' => 'admin', 'active' => true],
         );
         User::updateOrCreate(
             ['username' => 'staff'],
-            ['name' => 'Staff User', 'password' => Hash::make('password'), 'access' => 2, 'active' => true],
+            ['name' => 'Staff User', 'password' => Hash::make('password'), 'role' => 'staff', 'active' => true],
         );
-        User::factory(6)->create();
+        // One demo login per role (all password `password`) so each access
+        // level is testable out of the box.
+        foreach (['mgr' => 'manager', 'deliv' => 'deliveries', 'ord' => 'orders', 'wh' => 'warehouse'] as $username => $role) {
+            User::updateOrCreate(
+                ['username' => $username],
+                ['name' => ucfirst($role).' User', 'password' => Hash::make('password'), 'role' => $role, 'active' => true],
+            );
+        }
+        User::factory(4)->create();
 
         // --- Reference data ---
         Category::factory(8)->create();
@@ -49,6 +57,22 @@ class DatabaseSeeder extends Seeder
         // so the assignee-only status/comment gating is testable out of the box.
         if ($assignedEmployeeId = Task::whereNotNull('employee_id')->value('employee_id')) {
             User::where('username', 'staff')->update(['employee_id' => $assignedEmployeeId]);
+        }
+
+        // A freshly-provisioned login that must change its temp password on first
+        // login (username = the employee's code, temp password `temp-password`).
+        if ($newbie = Employee::whereDoesntHave('tasks')->whereNotIn('id', User::whereNotNull('employee_id')->pluck('employee_id'))->first()) {
+            User::updateOrCreate(
+                ['username' => $newbie->employee_code],
+                [
+                    'name' => $newbie->employee_name,
+                    'password' => Hash::make('temp-password'),
+                    'role' => 'deliveries',
+                    'active' => true,
+                    'employee_id' => $newbie->id,
+                    'must_change_password' => true,
+                ],
+            );
         }
         Delivery::factory(30)->create();
 

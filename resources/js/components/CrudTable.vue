@@ -9,6 +9,7 @@
             </div>
 
             <div class="toolbar-right">
+                <slot name="toolbar" />
                 <button v-if="filterable.length" class="btn btn-ghost" @click="showFilters = !showFilters">
                     <span v-html="filterIcon" /> Filters
                     <span v-if="activeFilterCount" class="badge badge-primary">{{ activeFilterCount }}</span>

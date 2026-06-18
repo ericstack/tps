@@ -7,7 +7,7 @@
                 <span class="brand-name">TPS</span>
             </div>
             <nav class="nav">
-                <router-link v-for="item in nav" :key="item.name" :to="{ name: item.name }" class="nav-link" @click="mobileOpen = false">
+                <router-link v-for="item in visibleNav" :key="item.name" :to="{ name: item.name }" class="nav-link" @click="mobileOpen = false">
                     <span class="nav-ico" v-html="item.icon" />
                     <span>{{ item.label }}</span>
                 </router-link>
@@ -36,7 +36,7 @@
                             <span class="avatar">{{ initials }}</span>
                             <span class="user-meta">
                                 <span class="user-name">{{ auth.user?.name }}</span>
-                                <span class="user-role">{{ auth.isAdmin ? 'Administrator' : 'User' }}</span>
+                                <span class="user-role">{{ roleLabel }}</span>
                             </span>
                             <span class="chev" v-html="icons.chevron" />
                         </button>
@@ -55,6 +55,9 @@
                                 </button>
                                 <button class="dropdown-item" @click="go('settings')">
                                     <span v-html="icons.cog" /> Settings
+                                </button>
+                                <button class="dropdown-item" @click="go('change-password')">
+                                    <span v-html="icons.user" /> Change password
                                 </button>
                                 <div class="dropdown-sep" />
                                 <button class="dropdown-item danger" @click="logout">
@@ -111,20 +114,33 @@ const icons = {
 
 const nav = [
     { name: 'dashboard', label: 'Dashboard', icon: icons.dashboard },
-    { name: 'inventory', label: 'Inventory', icon: icons.box },
-    { name: 'products', label: 'Products', icon: icons.tag },
+    { name: 'inventory', label: 'Inventory', icon: icons.box, module: 'inventory_products' },
+    { name: 'products', label: 'Products', icon: icons.tag, module: 'inventory_products' },
     { name: 'customers', label: 'Customers', icon: icons.contact },
     { name: 'employees', label: 'Employees', icon: icons.users },
-    { name: 'orders', label: 'Orders', icon: icons.cart },
+    { name: 'orders', label: 'Orders', icon: icons.cart, module: 'orders' },
     { name: 'tasks', label: 'Tasks', icon: icons.check },
-    { name: 'deliveries', label: 'Deliveries', icon: icons.truck },
-    { name: 'purchase-orders', label: 'Purchase Orders', icon: icons.file },
+    { name: 'deliveries', label: 'Deliveries', icon: icons.truck, module: 'deliveries' },
+    { name: 'purchase-orders', label: 'Purchase Orders', icon: icons.file, module: 'purchase_orders' },
 ];
+
+// Hide modules the current role can't access.
+const visibleNav = computed(() => nav.filter((item) => !item.module || auth.can(item.module)));
+
+const roleLabels = {
+    admin: 'Administrator',
+    manager: 'Manager',
+    deliveries: 'Deliveries',
+    orders: 'Orders',
+    warehouse: 'Warehouse',
+    staff: 'Staff',
+};
+const roleLabel = computed(() => roleLabels[auth.role] || 'User');
 
 const currentTitle = computed(() => {
     const found = nav.find((n) => n.name === route.name);
     if (found) return found.label;
-    return ({ users: 'Users', profile: 'Profile', settings: 'Settings' })[route.name] || 'TPS';
+    return ({ users: 'Users', profile: 'Profile', settings: 'Settings', 'change-password': 'Change Password' })[route.name] || 'TPS';
 });
 
 const initials = computed(() => {

@@ -20,23 +20,37 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 
+    // --- Open to any authenticated user ---
     Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('inventory', InventoryController::class);
-    Route::apiResource('products', ProductController::class);
     Route::apiResource('customers', CustomerController::class);
     Route::get('employees/next-code', [EmployeeController::class, 'nextCode']);
     Route::apiResource('employees', EmployeeController::class);
-    Route::apiResource('orders', OrderController::class);
+    // Tasks stay open; per-task status/comment is gated by TaskPolicy in the controller.
     Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus']);
     Route::get('tasks/{task}/comments', [TaskController::class, 'comments']);
     Route::post('tasks/{task}/comments', [TaskController::class, 'storeComment']);
     Route::apiResource('tasks', TaskController::class);
-    Route::apiResource('deliveries', DeliveryController::class);
-    Route::apiResource('purchase-orders', PurchaseOrderController::class);
 
-    // Admin-only user management (access === 1 in the legacy schema).
-    Route::middleware('role:1')->group(function () {
+    // --- Role-gated modules (config/roles.php) ---
+    Route::middleware('module:inventory_products')->group(function () {
+        Route::apiResource('inventory', InventoryController::class);
+        Route::apiResource('products', ProductController::class);
+    });
+    Route::middleware('module:orders')->group(function () {
+        Route::apiResource('orders', OrderController::class);
+    });
+    Route::middleware('module:deliveries')->group(function () {
+        Route::apiResource('deliveries', DeliveryController::class);
+    });
+    Route::middleware('module:purchase_orders')->group(function () {
+        Route::apiResource('purchase-orders', PurchaseOrderController::class);
+    });
+
+    // --- Admin-only user management ---
+    Route::middleware('admin')->group(function () {
+        Route::post('users/provision', [UserController::class, 'provision']);
         Route::apiResource('users', UserController::class);
     });
 });

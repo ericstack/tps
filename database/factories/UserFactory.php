@@ -20,14 +20,20 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'username' => fake()->unique()->userName(),
             'password' => static::$password ??= Hash::make('password'),
-            'access' => 2,
+            'role' => 'staff',
             'active' => true,
+            'must_change_password' => false,
             'remember_token' => Str::random(10),
         ];
     }
 
+    public function role(string $role): static
+    {
+        return $this->state(fn () => ['role' => $role]);
+    }
+
     public function admin(): static
     {
-        return $this->state(fn () => ['access' => 1]);
+        return $this->role('admin');
     }
 }
