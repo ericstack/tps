@@ -59,6 +59,18 @@ class User extends Authenticatable
         return Roles::canAccess($this->role, $module);
     }
 
+    /**
+     * Whether this account only sees its own assigned work (tasks, deliveries).
+     * Admins and managers have full oversight; an employee-linked account of any
+     * other role is scoped to records assigned to its employee.
+     */
+    public function seesOnlyAssignedWork(): bool
+    {
+        return ! $this->isAdmin()
+            && $this->role !== 'manager'
+            && $this->employee_id !== null;
+    }
+
     /** Resolved gated modules this account may access (for the SPA). */
     public function getModulesAttribute(): array
     {

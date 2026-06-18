@@ -20,7 +20,14 @@ class DeliveryController extends Controller
 
     public function index(Request $request)
     {
-        return Delivery::with(['order', 'employee'])->latest()->paginate($request->integer('per_page', 25));
+        $query = Delivery::with(['order', 'employee'])->latest();
+
+        // Field staff only see deliveries assigned to their employee record.
+        if ($request->user()->seesOnlyAssignedWork()) {
+            $query->where('employee_id', $request->user()->employee_id);
+        }
+
+        return $query->paginate($request->integer('per_page', 25));
     }
 
     public function store(Request $request)
@@ -38,13 +45,17 @@ class DeliveryController extends Controller
         return response()->json($delivery, 201);
     }
 
-    public function show(Delivery $delivery)
+    public function show(Request $request, Delivery $delivery)
     {
+        $this->authorizeAccess($request, $delivery);
+
         return $delivery->load(['order', 'employee']);
     }
 
     public function update(Request $request, Delivery $delivery)
     {
+        $this->authorizeAccess($request, $delivery);
+
         DB::transaction(function () use ($request, $delivery) {
             $delivery->update($this->validated($request));
             $this->syncOrderStatus($delivery);
@@ -53,11 +64,22 @@ class DeliveryController extends Controller
         return $delivery;
     }
 
-    public function destroy(Delivery $delivery)
+    public function destroy(Request $request, Delivery $delivery)
     {
+        $this->authorizeAccess($request, $delivery);
+
         $delivery->delete();
 
         return response()->noContent();
+    }
+
+    // Field staff may only touch deliveries assigned to their own employee.
+    private function authorizeAccess(Request $request, Delivery $delivery): void
+    {
+        $user = $request->user();
+        if ($user->seesOnlyAssignedWork() && (int) $delivery->employee_id !== (int) $user->employee_id) {
+            abort(403, 'This delivery is not assigned to you.');
+        }
     }
 
     // Control number is system-generated (sequential, e.g. DCN-000031), never user-supplied.

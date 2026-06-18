@@ -76,6 +76,13 @@ class DatabaseSeeder extends Seeder
         }
         Delivery::factory(30)->create();
 
+        // Link the demo `deliv` login to an employee that has deliveries + tasks,
+        // so the "only see work assigned to me" scoping is testable out of the box.
+        if ($workerId = Employee::whereHas('deliveries')->whereHas('tasks')
+            ->whereNotIn('id', User::whereNotNull('employee_id')->pluck('employee_id'))->value('id')) {
+            User::where('username', 'deliv')->update(['employee_id' => $workerId]);
+        }
+
         PurchaseOrder::factory(25)->create()->each(function (PurchaseOrder $po) {
             $po->items()->saveMany(
                 PurchaseOrderItem::factory(rand(1, 4))->make()

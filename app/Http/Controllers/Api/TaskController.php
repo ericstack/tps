@@ -8,9 +8,16 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Task::with('employee')->latest()->paginate(25);
+        $query = Task::with('employee')->latest();
+
+        // Field staff only see tasks assigned to their employee record.
+        if ($request->user()->seesOnlyAssignedWork()) {
+            $query->where('employee_id', $request->user()->employee_id);
+        }
+
+        return $query->paginate($request->integer('per_page', 25));
     }
 
     public function store(Request $request)
