@@ -37,6 +37,41 @@ class TaskController extends Controller
         return response()->noContent();
     }
 
+    // Quick status change (open | in progress | done) without re-submitting the whole task.
+    public function updateStatus(Request $request, Task $task)
+    {
+        $this->authorize('manage', $task);
+
+        $data = $request->validate([
+            'status' => ['required', 'in:open,in progress,done'],
+        ]);
+
+        $task->update($data);
+
+        return $task->load('employee');
+    }
+
+    public function comments(Task $task)
+    {
+        return $task->comments()->with('user:id,name,username')->latest()->get();
+    }
+
+    public function storeComment(Request $request, Task $task)
+    {
+        $this->authorize('manage', $task);
+
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $comment = $task->comments()->create([
+            'user_id' => $request->user()?->id,
+            'body' => $data['body'],
+        ]);
+
+        return response()->json($comment->load('user:id,name,username'), 201);
+    }
+
     private function validated(Request $request): array
     {
         return $request->validate([

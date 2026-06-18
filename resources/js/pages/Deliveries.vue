@@ -21,6 +21,8 @@ const columns = [
     { key: 'status', label: 'Status' },
 ];
 
+const statuses = ['pending', 'in transit', 'delivered', 'failed'];
+
 const orders = ref([]);
 const orderOptions = ref([]);
 
@@ -29,7 +31,7 @@ const fields = computed(() => [
     { key: 'customer_name', label: 'Customer Name' },
     { key: 'address', label: 'Delivery Address' },
     { key: 'employee_id', label: 'Employee ID', type: 'number' },
-    { key: 'status', label: 'Status (0/1)', type: 'number' },
+    { key: 'status', label: 'Status', default: 'pending', options: statuses.map((s) => ({ value: s, label: s })) },
 ]);
 
 // Selecting an order fills in the customer name and delivery address from that order.

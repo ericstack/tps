@@ -23,6 +23,7 @@ class UserController extends Controller
             'access' => ['required', 'integer', 'in:1,2'],
             'active' => ['boolean'],
             'assign' => ['nullable', 'string', 'max:255'],
+            'employee_id' => ['nullable', 'exists:employees,id'],
         ]);
 
         return response()->json(User::create($data), 201);
@@ -42,6 +43,7 @@ class UserController extends Controller
             'access' => ['required', 'integer', 'in:1,2'],
             'active' => ['boolean'],
             'assign' => ['nullable', 'string', 'max:255'],
+            'employee_id' => ['nullable', 'exists:employees,id'],
         ]);
 
         if (empty($data['password'])) {

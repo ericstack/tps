@@ -25,8 +25,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('inventory', InventoryController::class);
     Route::apiResource('products', ProductController::class);
     Route::apiResource('customers', CustomerController::class);
+    Route::get('employees/next-code', [EmployeeController::class, 'nextCode']);
     Route::apiResource('employees', EmployeeController::class);
     Route::apiResource('orders', OrderController::class);
+    Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus']);
+    Route::get('tasks/{task}/comments', [TaskController::class, 'comments']);
+    Route::post('tasks/{task}/comments', [TaskController::class, 'storeComment']);
     Route::apiResource('tasks', TaskController::class);
     Route::apiResource('deliveries', DeliveryController::class);
     Route::apiResource('purchase-orders', PurchaseOrderController::class);

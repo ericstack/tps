@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -24,7 +25,19 @@ class User extends Authenticatable
         'access',
         'active',
         'assign',
+        'employee_id',
     ];
+
+    /** Whether this account has admin access (legacy: access === 1). */
+    public function isAdmin(): bool
+    {
+        return (int) $this->access === 1;
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
 
     protected $hidden = [
         'password',

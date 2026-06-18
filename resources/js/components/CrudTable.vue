@@ -52,6 +52,7 @@
                     <tr v-for="row in pageRows" :key="row.id">
                         <td v-for="col in columns" :key="col.key">{{ display(row, col) }}</td>
                         <td class="actions">
+                            <slot name="row-actions" :row="row" />
                             <button class="btn btn-ghost btn-icon" @click="openEdit(row)" aria-label="Edit"><span v-html="editIcon" /></button>
                             <button class="btn btn-danger-ghost btn-icon" @click="destroy(row)" aria-label="Delete"><span v-html="trashIcon" /></button>
                         </td>
@@ -90,7 +91,7 @@
                         <button class="btn btn-ghost btn-icon" @click="showForm = false">×</button>
                     </div>
                     <form @submit.prevent="save" class="modal-body">
-                        <label v-for="f in fields" :key="f.key" class="field">
+                        <label v-for="f in fields" :key="f.key" class="field" :class="{ 'field-wide': f.type === 'textarea' }">
                             <span>{{ f.label }}</span>
                             <SearchableSelect
                                 v-if="f.options && f.searchable"
@@ -103,7 +104,8 @@
                                 <option value="" disabled>{{ f.placeholder || `Select ${f.label.toLowerCase()}` }}</option>
                                 <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                             </select>
-                            <input v-else v-model="formData[f.key]" :type="f.type || 'text'" class="input" :placeholder="f.placeholder || `Enter ${f.label.toLowerCase()}`" @input="onChange && onChange(f.key, formData[f.key], formData)" />
+                            <textarea v-else-if="f.type === 'textarea'" v-model="formData[f.key]" class="input" rows="3" :readonly="f.readonly" :placeholder="f.placeholder || `Enter ${f.label.toLowerCase()}`" @input="onChange && onChange(f.key, formData[f.key], formData)" />
+                            <input v-else v-model="formData[f.key]" :type="f.type || 'text'" class="input" :readonly="f.readonly" :placeholder="f.placeholder || `Enter ${f.label.toLowerCase()}`" @input="onChange && onChange(f.key, formData[f.key], formData)" />
                         </label>
                         <div class="modal-actions">
                             <button type="button" class="btn btn-ghost" @click="showForm = false">Cancel</button>
@@ -113,6 +115,9 @@
                 </div>
             </div>
         </transition>
+
+        <!-- Extra page-specific UI (drawers, panels, etc.) -->
+        <slot />
     </div>
 </template>
 
@@ -218,13 +223,20 @@ async function load() {
     }
 }
 
-function openCreate() {
+async function openCreate() {
     editing.value = null;
     // seed any field defaults for a fresh record
     formData.value = Object.fromEntries(
         props.fields.filter((f) => f.default !== undefined).map((f) => [f.key, f.default]),
     );
     showForm.value = true;
+    // pre-fill any system-generated fields (e.g. the next sequential code)
+    for (const f of props.fields.filter((f) => f.generate)) {
+        try {
+            const { data } = await window.axios.get(f.generate);
+            formData.value[f.key] = data[f.key] ?? data;
+        } catch { /* leave blank if the preview fetch fails */ }
+    }
 }
 function openEdit(row) { editing.value = row; formData.value = { ...row }; showForm.value = true; }
 
@@ -248,6 +260,9 @@ async function destroy(row) {
 }
 
 onMounted(load);
+
+// let parent pages refresh the list (e.g. after a status change in a custom panel)
+defineExpose({ reload: load });
 
 /* icons */
 const searchIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
@@ -302,6 +317,8 @@ tbody tr:hover td { background: var(--surface-hover); }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
 .modal-body { padding: 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem 1.25rem; }
 .field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.82rem; font-weight: 550; color: var(--text-muted); }
+.field-wide { grid-column: 1 / -1; }
+.field textarea { resize: vertical; }
 .modal-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.4rem; }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }

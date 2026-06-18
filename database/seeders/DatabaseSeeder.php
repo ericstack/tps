@@ -11,7 +11,9 @@ use App\Models\Inventory;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\Task;
+use App\Models\TaskComment;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -41,11 +43,18 @@ class DatabaseSeeder extends Seeder
         // --- Transactional data (depend on the above) ---
         Order::factory(50)->create();
         Task::factory(40)->create();
+        TaskComment::factory(60)->create();
+
+        // Link the demo `staff` login to an employee that actually has tasks,
+        // so the assignee-only status/comment gating is testable out of the box.
+        if ($assignedEmployeeId = Task::whereNotNull('employee_id')->value('employee_id')) {
+            User::where('username', 'staff')->update(['employee_id' => $assignedEmployeeId]);
+        }
         Delivery::factory(30)->create();
 
         PurchaseOrder::factory(25)->create()->each(function (PurchaseOrder $po) {
             $po->items()->saveMany(
-                \App\Models\PurchaseOrderItem::factory(rand(1, 4))->make()
+                PurchaseOrderItem::factory(rand(1, 4))->make()
             );
         });
 

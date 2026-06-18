@@ -21,11 +21,6 @@ class Delivery extends Model
         'status',
     ];
 
-    protected function casts(): array
-    {
-        return ['status' => 'integer'];
-    }
-
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);

@@ -21,7 +21,7 @@ function formatDate(value) {
     return y && m && d ? `${m}/${d}/${y}` : value;
 }
 const fields = [
-    { key: 'employee_code', label: 'Employee Code' },
+    { key: 'employee_code', label: 'Employee Code', readonly: true, generate: '/api/employees/next-code', placeholder: 'Auto-generated' },
     { key: 'employee_name', label: 'Name' },
     { key: 'position', label: 'Position', options: positions.map((p) => ({ value: p, label: p })) },
     { key: 'address', label: 'Address' },

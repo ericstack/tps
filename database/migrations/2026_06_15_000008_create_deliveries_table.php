@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('customer_name');
             $table->string('address')->nullable();
             $table->foreignId('employee_id')->nullable()->constrained('employees')->cascadeOnUpdate()->nullOnDelete();
-            $table->unsignedTinyInteger('status')->default(0); // 0 = pending, 1 = delivered
+            $table->string('status')->default('pending'); // pending | in transit | delivered | failed
             $table->timestamps();
         });
     }

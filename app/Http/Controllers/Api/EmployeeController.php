@@ -15,7 +15,16 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
-        return response()->json(Employee::create($this->validated($request)), 201);
+        $data = $this->validated($request);
+        $data['employee_code'] = $this->nextEmployeeCode();
+
+        return response()->json(Employee::create($data), 201);
+    }
+
+    // Preview the next system-generated employee code (for the create form).
+    public function nextCode()
+    {
+        return ['employee_code' => $this->nextEmployeeCode()];
     }
 
     public function show(Employee $employee)
@@ -37,10 +46,20 @@ class EmployeeController extends Controller
         return response()->noContent();
     }
 
+    // Employee code is system-generated (sequential, e.g. EMP-0051) off the highest
+    // existing numeric suffix, never user-supplied — so it isn't validated here.
+    private function nextEmployeeCode(): string
+    {
+        $max = Employee::pluck('employee_code')
+            ->map(fn ($code) => (int) preg_replace('/\D/', '', (string) $code))
+            ->max() ?? 0;
+
+        return 'EMP-'.str_pad((string) ($max + 1), 4, '0', STR_PAD_LEFT);
+    }
+
     private function validated(Request $request, ?int $id = null): array
     {
         return $request->validate([
-            'employee_code' => ['required', 'string', 'max:255', 'unique:employees,employee_code'.($id ? ",$id" : '')],
             'employee_name' => ['required', 'string', 'max:255'],
             'position' => ['nullable', 'in:Driver,Warehouse Staff,Manager,Clerk,Supervisor,Dispatcher'],
             'address' => ['nullable', 'string', 'max:255'],

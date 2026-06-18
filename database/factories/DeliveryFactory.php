@@ -16,7 +16,7 @@ class DeliveryFactory extends Factory
             'customer_name' => fake()->name(),
             'address' => fake()->address(),
             'employee_id' => Employee::inRandomOrder()->value('id') ?? Employee::factory(),
-            'status' => fake()->randomElement([0, 1]),
+            'status' => fake()->randomElement(['pending', 'in transit', 'delivered', 'failed']),
         ];
     }
 }
