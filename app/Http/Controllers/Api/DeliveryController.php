@@ -32,6 +32,11 @@ class DeliveryController extends Controller
 
     public function store(Request $request)
     {
+        // Field staff are *assigned* deliveries; they cannot create them.
+        if ($request->user()->seesOnlyAssignedWork()) {
+            abort(403, 'Deliveries are assigned to you; you cannot create them.');
+        }
+
         $data = $this->validated($request);
         $data['control_number'] = $this->nextControlNumber();
 
@@ -66,6 +71,11 @@ class DeliveryController extends Controller
 
     public function destroy(Request $request, Delivery $delivery)
     {
+        // Field staff may update their deliveries' status but never delete them.
+        if ($request->user()->seesOnlyAssignedWork()) {
+            abort(403, 'You cannot delete deliveries.');
+        }
+
         $this->authorizeAccess($request, $delivery);
 
         $delivery->delete();

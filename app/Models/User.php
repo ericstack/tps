@@ -38,7 +38,7 @@ class User extends Authenticatable
 
     // Ship the resolved module list to the SPA so it can gate the UI without
     // duplicating the role → module map in JavaScript.
-    protected $appends = ['modules'];
+    protected $appends = ['modules', 'hidden_modules', 'sees_only_assigned_work'];
 
     protected function casts(): array
     {
@@ -75,6 +75,18 @@ class User extends Authenticatable
     public function getModulesAttribute(): array
     {
         return Roles::modulesFor($this->role);
+    }
+
+    /** Otherwise-open modules hidden from this account's role (for the SPA). */
+    public function getHiddenModulesAttribute(): array
+    {
+        return Roles::hiddenFor($this->role);
+    }
+
+    /** Whether this account is scoped to its own assigned work (for the SPA). */
+    public function getSeesOnlyAssignedWorkAttribute(): bool
+    {
+        return $this->seesOnlyAssignedWork();
     }
 
     public function employee(): BelongsTo

@@ -21,6 +21,14 @@ class Delivery extends Model
         'status',
     ];
 
+    // Surface the parent order's code so the SPA can show it read-only.
+    protected $appends = ['order_code'];
+
+    public function getOrderCodeAttribute(): ?string
+    {
+        return $this->order?->order_code;
+    }
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);

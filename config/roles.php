@@ -5,8 +5,8 @@
 // resolved module list on the auth payload — see User::$appends 'modules').
 //
 // `gated` lists the modules that are access-restricted. Anything not listed
-// here (dashboard, customers, employees, tasks) is open to any authenticated
-// user. The `users` admin area is gated separately by the `admin` middleware.
+// here (dashboard, customers, employees) is open to any authenticated user.
+// The `users` admin area is gated separately by the `admin` middleware.
 return [
     'gated' => [
         'inventory_products',
@@ -19,9 +19,17 @@ return [
     'roles' => [
         'admin' => ['*'],
         'manager' => ['inventory_products', 'orders', 'deliveries', 'purchase_orders'],
-        'deliveries' => ['orders', 'deliveries'],
+        // Field deliveries staff only handle deliveries (+ the open Dashboard).
+        'deliveries' => ['deliveries'],
         'orders' => ['orders'],
         'warehouse' => ['inventory_products', 'purchase_orders'],
         'staff' => [],
+    ],
+
+    // Per-role overrides that *hide* otherwise-open modules (dashboard,
+    // customers, employees) for specific roles, without changing the
+    // allow-list for everyone else. A module here is denied even if open.
+    'hidden' => [
+        'deliveries' => ['dashboard', 'customers', 'employees'],
     ],
 ];

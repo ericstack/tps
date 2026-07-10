@@ -14,7 +14,7 @@
                     <span v-html="filterIcon" /> Filters
                     <span v-if="activeFilterCount" class="badge badge-primary">{{ activeFilterCount }}</span>
                 </button>
-                <button class="btn btn-primary" @click="openCreate">
+                <button v-if="canCreate" class="btn btn-primary" @click="openCreate">
                     <span v-html="plusIcon" /> New
                 </button>
             </div>
@@ -55,7 +55,7 @@
                         <td class="actions">
                             <slot name="row-actions" :row="row" />
                             <button class="btn btn-ghost btn-icon" @click="openEdit(row)" aria-label="Edit"><span v-html="editIcon" /></button>
-                            <button class="btn btn-danger-ghost btn-icon" @click="destroy(row)" aria-label="Delete"><span v-html="trashIcon" /></button>
+                            <button v-if="canDelete" class="btn btn-danger-ghost btn-icon" @click="destroy(row)" aria-label="Delete"><span v-html="trashIcon" /></button>
                         </td>
                     </tr>
                     <tr v-if="!loading && !filtered.length">
@@ -92,7 +92,7 @@
                         <button class="btn btn-ghost btn-icon" @click="showForm = false">×</button>
                     </div>
                     <form @submit.prevent="save" class="modal-body">
-                        <label v-for="f in fields" :key="f.key" class="field" :class="{ 'field-wide': f.type === 'textarea' }">
+                        <label v-for="f in visibleFields" :key="f.key" class="field" :class="{ 'field-wide': f.type === 'textarea' }">
                             <span>{{ f.label }}</span>
                             <SearchableSelect
                                 v-if="f.options && f.searchable"
@@ -135,6 +135,9 @@ const props = defineProps({
     filterKeys: { type: Array, default: null },
     // optional: (key, value, formData) => void — called when a form field changes (for auto-fill, etc.)
     onChange: { type: Function, default: null },
+    // optional: hide the New / Delete actions (e.g. for read/update-only roles)
+    canCreate: { type: Boolean, default: true },
+    canDelete: { type: Boolean, default: true },
 });
 
 // emitted after a successful create/update/delete, so parents can refresh dependent data
@@ -156,6 +159,14 @@ const editing = ref(null);
 const formData = ref({});
 
 const singular = computed(() => props.title.replace(/s$/, ''));
+
+// `editOnly` fields (e.g. a system-generated code shown read-only) appear only
+// in the edit modal; `createOnly` fields appear only when creating a record.
+const visibleFields = computed(() =>
+    editing.value
+        ? props.fields.filter((f) => !f.createOnly)
+        : props.fields.filter((f) => !f.editOnly),
+);
 
 const filterable = computed(() => {
     if (props.filterKeys) return props.fields.filter((f) => props.filterKeys.includes(f.key));

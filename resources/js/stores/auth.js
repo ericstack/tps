@@ -11,8 +11,14 @@ export const useAuthStore = defineStore('auth', {
         mustChangePassword: (state) => !!state.user?.must_change_password,
         // Uses the server-resolved module list on the user payload, so the
         // role → module map lives only on the backend (config/roles.php).
-        can: (state) => (module) =>
-            state.user?.role === 'admin' || (state.user?.modules || []).includes(module),
+        can: (state) => (module) => {
+            if ((state.user?.hidden_modules || []).includes(module)) return false;
+            return state.user?.role === 'admin' || (state.user?.modules || []).includes(module);
+        },
+        // Otherwise-open modules (customers/employees) hidden from this role.
+        isHidden: (state) => (module) => (state.user?.hidden_modules || []).includes(module),
+        // Field staff scoped to their own assigned tasks/deliveries.
+        seesOnlyAssignedWork: (state) => !!state.user?.sees_only_assigned_work,
     },
     actions: {
         // Sanctum requires the CSRF cookie before the first stateful POST.

@@ -29,6 +29,8 @@ const customerOptions = ref([]);
 const productOptions = ref([]);
 
 const fields = computed(() => [
+    // System-generated; shown read-only when editing, hidden on create.
+    { key: 'order_code', label: 'Order #', editOnly: true, readonly: true },
     { key: 'customer_id', label: 'Customer', options: customerOptions.value, searchable: true },
     { key: 'product_id', label: 'Product', options: productOptions.value, searchable: true },
     { key: 'order_quantity', label: 'Quantity', type: 'number' },

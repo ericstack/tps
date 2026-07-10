@@ -113,19 +113,20 @@ const icons = {
 };
 
 const nav = [
-    { name: 'dashboard', label: 'Dashboard', icon: icons.dashboard },
+    { name: 'dashboard', label: 'Dashboard', icon: icons.dashboard, hide: 'dashboard' },
     { name: 'inventory', label: 'Inventory', icon: icons.box, module: 'inventory_products' },
     { name: 'products', label: 'Products', icon: icons.tag, module: 'inventory_products' },
-    { name: 'customers', label: 'Customers', icon: icons.contact },
-    { name: 'employees', label: 'Employees', icon: icons.users },
+    { name: 'customers', label: 'Customers', icon: icons.contact, hide: 'customers' },
+    { name: 'employees', label: 'Employees', icon: icons.users, hide: 'employees' },
     { name: 'orders', label: 'Orders', icon: icons.cart, module: 'orders' },
-    { name: 'tasks', label: 'Tasks', icon: icons.check },
     { name: 'deliveries', label: 'Deliveries', icon: icons.truck, module: 'deliveries' },
     { name: 'purchase-orders', label: 'Purchase Orders', icon: icons.file, module: 'purchase_orders' },
 ];
 
-// Hide modules the current role can't access.
-const visibleNav = computed(() => nav.filter((item) => !item.module || auth.can(item.module)));
+// Hide gated modules the role can't access, plus open modules hidden per-role.
+const visibleNav = computed(() =>
+    nav.filter((item) => (!item.module || auth.can(item.module)) && !(item.hide && auth.isHidden(item.hide)))
+);
 
 const roleLabels = {
     admin: 'Administrator',

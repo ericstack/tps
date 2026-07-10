@@ -24,9 +24,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- Open to any authenticated user ---
     Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('customers', CustomerController::class);
-    Route::get('employees/next-code', [EmployeeController::class, 'nextCode']);
-    Route::apiResource('employees', EmployeeController::class);
+    // Customers/Employees are open by default but can be hidden per-role
+    // (config/roles.php 'hidden'); the module middleware enforces that.
+    Route::middleware('module:customers')->group(function () {
+        Route::apiResource('customers', CustomerController::class);
+    });
+    Route::middleware('module:employees')->group(function () {
+        Route::get('employees/next-code', [EmployeeController::class, 'nextCode']);
+        Route::apiResource('employees', EmployeeController::class);
+    });
     // Tasks stay open; per-task status/comment is gated by TaskPolicy in the controller.
     Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus']);
     Route::get('tasks/{task}/comments', [TaskController::class, 'comments']);

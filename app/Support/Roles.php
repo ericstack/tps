@@ -32,9 +32,26 @@ class Roles
         return in_array('*', $modules, true) ? self::gated() : $modules;
     }
 
-    /** Whether a role grants access to a given module. */
+    /** Otherwise-open modules explicitly hidden from a role. */
+    public static function hiddenFor(?string $role): array
+    {
+        return Config::get("roles.hidden.$role", []);
+    }
+
+    /**
+     * Whether a role may access a module. Hidden modules are always denied;
+     * gated modules require an explicit grant; open modules are allowed.
+     */
     public static function canAccess(?string $role, string $module): bool
     {
+        if (in_array($module, self::hiddenFor($role), true)) {
+            return false;
+        }
+
+        if (! in_array($module, self::gated(), true)) {
+            return true;
+        }
+
         return in_array($module, self::modulesFor($role), true);
     }
 }

@@ -20,5 +20,6 @@ yarn-error.log
 /.vscode
 _laravel_tmp
 CLAUDE.local.md
+CLAUDE.md
 /database/*.sqlite
 /database/*.sqlite-journal
